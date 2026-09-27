@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /config/
+Disallow: /forms/
+
+Sitemap: https://urrigroup.com/sitemap.xml

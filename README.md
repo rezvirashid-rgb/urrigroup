@@ -4,142 +4,117 @@ A modern, lightweight, fully responsive corporate website for **Urri Group**, a 
 
 > **One Group. Every Direction Forward.**
 
-Phase 1 focuses on a strong corporate presentation, fast performance, mobile
-responsiveness, basic SEO and a single piece of backend functionality: a
-**contact form** that stores submissions in a database and emails a
-notification. No CMS, admin panel, login or user accounts — by design.
+Phase 1 is a fast, accessible, SEO-ready corporate site with one piece of
+backend functionality: a **contact form** that stores submissions in MySQL and
+emails a notification. No CMS, admin panel, login or user accounts — by design.
 
 ---
 
-## Tech stack
+## The short version
 
-| Layer     | Technology                          |
-|-----------|-------------------------------------|
-| Markup    | HTML5 (semantic)                    |
-| Styling   | CSS3 (single stylesheet, no framework) |
-| Behaviour | Vanilla JavaScript (no dependencies)|
-| Backend   | PHP 7.4+ / 8.x (contact form only)  |
-| Database  | MySQL 5.7+ / MariaDB 10.3+          |
-| Fonts     | Poppins + Anton (Google Fonts)      |
-
-Works on standard **shared / cPanel hosting**. No build step required.
+- **To put the site online:** upload the contents of **`public/`** to your
+  hosting and follow **[INSTALLATION.md](INSTALLATION.md)**.
+- **To change content:** edit files in **`src/`**, then run
+  `php build/build.php` to regenerate `public/`.
 
 ---
 
-## Project structure
+## Project layout
 
 ```
 urrigroup/
-├── index.html              # Homepage
-├── about.html              # About the Group
-├── companies.html          # All 20 companies, grouped by pillar
-├── contact.html            # Contact info + contact form
-├── 404.html                # Friendly error page
+├── public/                 ← THE WEBSITE. Upload this folder's contents. (generated)
 │
-├── companies/              # Individual pages for the 5 launch businesses
-│   ├── urri-travels.html
-│   ├── urri-international.html
-│   ├── urri-sourcing.html
-│   ├── urri-consultancy.html
-│   └── urri-media.html
+├── src/                    ← Edit here
+│   ├── data/
+│   │   ├── site.php        # name, email, phone, URL, navigation
+│   │   └── companies.php   # all 20 companies, pillars, statuses, detail pages
+│   ├── pages/              # page templates (home, about, companies, contact, 404, company)
+│   ├── partials/           # shared layout (head, header, footer) + icons
+│   ├── assets/             # CSS + JS sources (minified into public/ on build)
+│   └── static/             # copied into public/ as-is: form backend, config
+│                           #   example, .htaccess, fonts, icons, images
 │
-├── assets/
-│   ├── css/style.css       # Full design system
-│   ├── js/config.js        # ← Edit social links & public contact info here
-│   ├── js/main.js          # Nav, scroll reveal, form handling
-│   ├── images/og-image.png # Social share image (1200×630)
-│   └── icons/favicon.svg
+├── build/
+│   ├── build.php           # generator — `php build/build.php`
+│   └── make-images.js      # regenerates icons + share image (only if the logo changes)
 │
-├── forms/
-│   └── contact.php         # Contact form processor (DB + email + security)
-│
-├── config/
-│   └── config.example.php  # ← Copy to config.php and fill in credentials
-│
-├── database/
-│   └── database.sql        # Database schema (import once)
-│
-├── robots.txt
-├── sitemap.xml
-├── .htaccess               # HTTPS, caching, security, 404 (Apache)
-├── .gitignore
+├── database/database.sql   # import once into MySQL/MariaDB
 ├── README.md
-└── INSTALLATION.md         # Step-by-step deployment guide
+└── INSTALLATION.md
 ```
 
----
-
-## Quick start (local or hosting)
-
-1. Upload all files to your web root (e.g. `public_html`).
-2. Create a MySQL/MariaDB database and import `database/database.sql`.
-3. Copy `config/config.example.php` → `config/config.php` and fill in your
-   database credentials, admin email and site URL.
-4. (Optional) Edit `assets/js/config.js` to add your real social-media URLs.
-5. Visit your domain — the site is live.
-
-See **[INSTALLATION.md](INSTALLATION.md)** for the detailed walkthrough.
+`public/` is committed, so the site can be uploaded without running anything.
+`database/` and the docs live **outside** `public/`, so they are never
+downloadable from the live site.
 
 ---
 
-## Where to edit common things
+## Where to change common things
 
-| I want to change…              | Edit this file                              |
-|--------------------------------|---------------------------------------------|
-| Social media links             | `assets/js/config.js` (and `config/config.php`) |
-| Public email / phone shown     | `assets/js/config.js`                       |
-| Where form emails are sent     | `config/config.php` → `ADMIN_EMAIL`         |
-| Database credentials           | `config/config.php`                         |
-| Colours / typography           | `assets/css/style.css` (`:root` variables)  |
-| Company list / statuses        | `companies.html`                            |
+| I want to change…                     | Edit                                   | Then |
+|---------------------------------------|----------------------------------------|------|
+| A company's status, description, services | `src/data/companies.php`           | rebuild |
+| Email / phone / site URL              | `src/data/site.php`                    | rebuild |
+| Page wording                          | `src/pages/*.php`                      | rebuild |
+| Header / footer / navigation          | `src/partials/layout.php`, `src/data/site.php` | rebuild |
+| Colours / typography                  | `src/assets/css/style.css` (`:root`)   | rebuild |
+| Social media links                    | `public/assets/js/config.js` (also `src/static/assets/js/config.js`) | no rebuild needed |
+| Database / email settings             | `config/config.php` **on the server**  | — |
 
-> **Note:** `config/config.php` is intentionally **not** included and is
-> git-ignored. It must be created on the server from the example file.
+Company counts on the homepage and About page ("20 businesses", "4 launching
+now", …) are calculated from `companies.php`, so they can't drift out of date.
+
+**Rebuild:** `php build/build.php` (PHP 7.4+, no other tools). It rewrites
+`public/` but keeps a local `public/config/config.php` if you have one.
 
 ---
 
 ## The contact form
 
-The only backend feature in Phase 1. When a visitor submits the form:
-
-1. Fields are validated **client-side** (instant feedback) and again
-   **server-side** (authoritative).
-2. The submission is stored in the `contact_submissions` table using a
-   **prepared statement** (no SQL injection).
-3. An **email notification** is sent to `ADMIN_EMAIL`.
+1. Fields are validated in the browser for instant feedback, then again on the
+   server (authoritative).
+2. The message is stored in `contact_submissions` with a prepared statement.
+3. A notification email goes to `ADMIN_EMAIL`, via PHP `mail()` or, for better
+   delivery, your own mailbox over **SMTP** (set `MAIL_TRANSPORT` to `'smtp'`).
 4. The visitor sees a success message.
 
-**Security measures built in:**
+**Protections built in**
 
-- Prepared/parameterised SQL statements (PDO)
-- Server-side validation + input sanitisation
-- CSRF protection (session token, with same-origin fallback for no-JS)
-- Honeypot anti-spam field
-- Rate limiting / submission throttling
-- Email format validation & header-injection guards
-- Database errors are logged server-side, never shown to visitors
-- No passwords are stored (there is no login in Phase 1)
+- Prepared SQL statements (no SQL injection); output escaping (no XSS)
+- CSRF token, with a same-origin check for visitors without JavaScript
+- Honeypot field and a minimum fill time (instant bot submissions are ignored)
+- Rate limits per visitor **and per IP address** (stored in the database, so
+  cookie-less bots can't bypass them); the IP comes from the real connection
+  and can't be spoofed with headers
+- Email headers are encoded and sanitised: Bangla names and subjects arrive
+  intact, and nothing typed in the form can add recipients
+- Hardened session cookie (HttpOnly, SameSite, Secure on HTTPS)
+- Internal errors are logged, never shown to visitors; no passwords stored
 
-Submissions can be viewed directly in the database (e.g. via phpMyAdmin) —
-no admin interface is required for Phase 1.
+View submissions in phpMyAdmin (`contact_submissions` table). No admin
+interface is needed for Phase 1.
 
 ---
 
-## Accessibility & SEO
+## Performance, SEO and accessibility
 
-- Semantic HTML, proper heading hierarchy, form labels, alt/aria text
-- Keyboard navigation, visible focus states, reduced-motion support
-- Per-page titles, meta descriptions, canonical URLs, Open Graph tags
-- `sitemap.xml`, `robots.txt`, favicon, JSON-LD organisation data
+- Fonts (Poppins, Anton) are **self-hosted** and preloaded: no third-party
+  requests, faster first paint on mobile networks
+- Minified CSS/JS with cache-busting versions; long browser caching
+- Per-page titles, descriptions, canonical URLs, Open Graph/Twitter cards,
+  JSON-LD organisation data, `sitemap.xml` (with dates), `robots.txt`
+- Favicon set: `.ico`, SVG, Apple touch icon, Android/manifest icons
+- Semantic HTML, labelled fields with linked error messages, keyboard-safe
+  mobile menu, visible focus, WCAG-AA text colours, reduced-motion support
 
 ---
 
 ## Built for Phase 2
 
-The frontend is structured cleanly so a CMS/admin backend can be added later
-(admin login, company management, blog/news, careers, newsletter, multiple
-languages, analytics) **without rebuilding the frontend**. None of that is
-implemented now — Phase 1 stays intentionally simple.
+Content already lives in data files and templates, so a CMS or admin backend
+(company management, news, careers, multiple languages) can later replace
+`src/data/*.php` without redesigning the frontend.
 
 ---
 

@@ -1,124 +1,123 @@
 # Installation Guide — Urri Group Website
 
-This guide deploys the website on standard **shared / cPanel hosting**
-(the setup used by Spaceship, Namecheap, and most Bangladeshi hosts).
+This guide puts the website live on standard **shared / cPanel hosting**
+(Spaceship, Namecheap and most Bangladeshi hosts).
 
 ```
-Upload files → Create MySQL database → Import database.sql →
-Configure database credentials → Configure email → Open urrigroup.com → Live
+Upload public/ → Create MySQL database → Import database.sql →
+Create config.php → Configure email → Open urrigroup.com → Live
 ```
 
-Total time: about 10–15 minutes. No coding required.
+About 10–15 minutes. No coding required.
 
 ---
 
 ## Before you start
 
-You will need:
+You need:
 
 - Access to your hosting control panel (cPanel or similar).
-- Your domain (`urrigroup.com`) pointed at the hosting account.
-- The website files from this project.
+- Your domain (`urrigroup.com`) pointed at the hosting account
+  (see *Connecting the domain* below).
+- This project. On GitHub: **Code → Download ZIP**, then unzip it on your computer.
 
 ---
 
-## Step 1 — Upload the files
+## Step 1 — Upload the website
 
-**Option A · cPanel File Manager (easiest)**
+Upload **the contents of the `public/` folder**, not the whole project.
 
-1. Log in to your hosting control panel.
-2. Open **File Manager** → go to `public_html`.
-3. Upload the project as a `.zip`, then **Extract** it.
-4. Make sure the files sit **directly inside `public_html`**, i.e.
-   `public_html/index.html` — not `public_html/urrigroup/index.html`.
+**Option A · File Manager (easiest)**
 
-**Option B · FTP**
+1. On your computer, open the `public` folder, select everything inside it
+   and compress it into a `.zip`.
+   *(Make sure hidden files are included: the `.htaccess` file matters.)*
+2. In your hosting control panel open **File Manager** → `public_html`.
+3. Upload the zip, then **Extract** it there.
+4. Check that `public_html/index.html` exists (not
+   `public_html/public/index.html`).
 
-Connect with FileZilla using the FTP details from your host and upload the
-whole folder's contents into `public_html`.
+**Option B · FTP** — connect with FileZilla and upload the contents of
+`public/` into `public_html`. Enable "show hidden files" so `.htaccess` goes too.
 
-> After uploading you should see `index.html`, `about.html`, the `assets/`,
-> `companies/`, `forms/`, `config/`, and `database/` folders in `public_html`.
+You should now see `index.html`, `about.html`, `favicon.ico`, `.htaccess`
+and the `assets/`, `companies/`, `forms/` and `config/` folders in `public_html`.
 
 ---
 
 ## Step 2 — Create a MySQL / MariaDB database
 
-In cPanel, open **MySQL® Databases** (or **MySQL Database Wizard**):
+In the control panel open **MySQL® Databases** (or **MySQL Database Wizard**):
 
-1. **Create a database**, e.g. `urrigrp_main`.
-2. **Create a database user**, e.g. `urrigrp_user`, with a strong password.
-   *(Save this password — you'll need it in Step 4.)*
-3. **Add the user to the database** and grant **ALL PRIVILEGES**.
+1. Create a database, e.g. `urrigrp_main`.
+2. Create a database user, e.g. `urrigrp_user`, with a strong password. Save it.
+3. Add the user to the database with **ALL PRIVILEGES**.
 
-Write down these four values:
-
-- Database host — usually `localhost`
-- Database name — e.g. `urrigrp_main`
-- Database user — e.g. `urrigrp_user`
-- Database password — the one you just created
+Note the database host (usually `localhost`), name, user and password.
 
 ---
 
-## Step 3 — Import the database schema
+## Step 3 — Import the database table
 
-1. In cPanel, open **phpMyAdmin**.
-2. Select your new database on the left.
-3. Click the **Import** tab.
-4. Choose the file `database/database.sql` from this project.
-5. Click **Go / Import**.
-
-You should now see a `contact_submissions` table. That's all that's needed.
+1. Open **phpMyAdmin** and select your new database.
+2. **Import** → choose `database/database.sql` from the project
+   (on your computer; this file is not uploaded to the website).
+3. Click **Go**. A `contact_submissions` table appears.
 
 ---
 
-## Step 4 — Configure database credentials
+## Step 4 — Create config.php
 
-1. In **File Manager**, go to the `config/` folder.
-2. Copy `config.example.php` and rename the copy to **`config.php`**.
-   *(In File Manager: right-click → Copy, then rename.)*
-3. Edit `config.php` and fill in the values from Step 2:
+1. In File Manager, open `public_html/config/`.
+2. Copy `config.example.php` and name the copy **`config.php`**.
+3. Edit `config.php` and enter the database details from Step 2:
 
 ```php
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'urrigrp_main');
 define('DB_USER', 'urrigrp_user');
 define('DB_PASS', 'your-strong-password');
+define('SITE_URL', 'https://urrigroup.com');
 ```
 
-Save the file.
-
-> **Important:** keep the file named `config.php`. It is protected from direct
-> web access by `.htaccess`, and it is never committed to source control.
+`config.php` is blocked from web access by `.htaccess` and is never
+committed to Git.
 
 ---
 
 ## Step 5 — Configure email
 
-Still in `config.php`, set where contact-form notifications go and the
-address they are sent *from*:
+In the control panel, create a mailbox on your domain to send from, e.g.
+**`no-reply@urrigroup.com`** (Email Accounts). Then in `config.php`:
 
 ```php
-define('ADMIN_EMAIL', 'admin@urrigroup.com');
-define('MAIL_FROM',   'no-reply@urrigroup.com');   // use YOUR domain
-define('SITE_URL',    'https://urrigroup.com');
+define('ADMIN_EMAIL', 'admin@urrigroup.com');     // where messages arrive
+define('MAIL_FROM',   'no-reply@urrigroup.com');  // the mailbox you created
 ```
 
-> **Deliverability tip:** the `MAIL_FROM` address should be an address on your
-> own domain (create `no-reply@urrigroup.com` in cPanel → Email Accounts).
-> Sending "from" a Gmail/Yahoo address on shared hosting often lands in spam.
-> If email is unreliable on your host, ask them to enable mail() or consider
-> SMTP in Phase 2 — form submissions are always saved to the database
-> regardless of email delivery.
+**Recommended — send through that mailbox (SMTP).** Messages are far less
+likely to land in spam. Find the "outgoing server" details under your
+mailbox's *Connect Devices* / *Mail Client Settings*:
 
-Save the file.
+```php
+define('MAIL_TRANSPORT', 'smtp');
+define('SMTP_HOST',   'mail.urrigroup.com');   // outgoing server shown by your host
+define('SMTP_PORT',   465);                    // 465 with 'ssl'  (or 587 with 'tls')
+define('SMTP_SECURE', 'ssl');
+define('SMTP_USER',   'no-reply@urrigroup.com');
+define('SMTP_PASS',   'the mailbox password');
+```
+
+Or keep `define('MAIL_TRANSPORT', 'mail');` to use the server's built-in mail.
+
+Either way, every message is **saved to the database first**, so nothing is
+lost if an email fails.
 
 ---
 
 ## Step 6 — (Optional) Add your social links
 
-Open `assets/js/config.js` and replace the `#` placeholders with your real
-profile URLs:
+Edit `public_html/assets/js/config.js` and replace the `#` placeholders:
 
 ```js
 social: {
@@ -128,71 +127,75 @@ social: {
 }
 ```
 
-Leave any you don't have yet as `"#"`. Do the same in `config/config.php`
-if you want the server-side copy to match.
+Also copy the change into `src/static/assets/js/config.js` in the project, so
+the next rebuild keeps it.
 
 ---
 
 ## Step 7 — Open your website
 
-Visit **https://urrigroup.com** — the website is live.
-
-Test the checklist below.
+Visit **https://urrigroup.com**. The site is live.
 
 ---
 
 ## Post-launch checklist
 
-- [ ] Home, About, Our Companies and Contact pages all load.
-- [ ] The five company pages open from the Companies page.
+- [ ] Home, About, Our Companies and Contact load; the five company pages open.
 - [ ] The mobile menu works on a phone.
-- [ ] Submit the contact form with a real message.
-- [ ] The success message appears.
-- [ ] The row appears in `contact_submissions` (phpMyAdmin).
-- [ ] The notification email arrives at `admin@urrigroup.com`
-      (check spam the first time).
-- [ ] `https://urrigroup.com/sitemap.xml` and `/robots.txt` load.
-- [ ] Visiting a made-up URL shows the 404 page.
+- [ ] On Our Companies, an **Inquire** button opens Contact with the business
+      area already selected.
+- [ ] Send a test message → success message appears.
+- [ ] The message appears in `contact_submissions` (phpMyAdmin).
+- [ ] The notification arrives at `admin@urrigroup.com` (check spam the first time).
+- [ ] `/sitemap.xml` and `/robots.txt` load; a made-up URL shows the 404 page.
+- [ ] `https://urrigroup.com/config/config.php` shows **not found**
+      (proof your credentials are protected).
+
+Testing tip: the form deliberately limits each connection to one message every
+30 seconds and 5 per hour (adjustable in `config.php`). Wait between test
+messages.
 
 ---
 
-## Connecting the domain (Namecheap → hosting)
+## Connecting the domain (Namecheap → Spaceship hosting)
 
-If your domain is at **Namecheap** and hosting is elsewhere (e.g. Spaceship):
+- **Easiest:** in Namecheap → Domain List → *Manage* → **Nameservers** →
+  *Custom DNS*, enter the nameservers shown in your Spaceship hosting dashboard.
+- **Or:** in Namecheap → **Advanced DNS**, add an **A record** for `@` pointing
+  to your hosting IP, and a **CNAME** for `www` pointing to `urrigroup.com`.
 
-- **Easiest:** in Namecheap, set the domain's **nameservers** to the ones your
-  host gives you (Domain → Nameservers → Custom DNS). Your host's dashboard
-  shows the exact nameservers.
-- **Or (DNS records):** in Namecheap → **Advanced DNS**, add an **A record**
-  (`@`) pointing to your hosting IP, and a **CNAME** (`www`) pointing to your
-  domain. Your host provides the IP.
-
-DNS changes can take a few minutes to a few hours to take effect.
+DNS changes take from a few minutes to a few hours. Once the domain works,
+enable the free SSL certificate in your hosting panel (often "SSL/TLS
+Status" or "AutoSSL"); the site then redirects to `https://` automatically.
 
 ---
 
 ## Troubleshooting
 
-**The form says "not fully configured yet."**
-→ You have not created `config/config.php` from `config.example.php` (Step 4).
+**Form says "not fully configured yet."** → `config/config.php` doesn't
+exist yet (Step 4).
 
-**The form says it can't save the message.**
-→ Database credentials in `config.php` are wrong, or `database.sql` wasn't
-imported. Re-check Steps 2–4.
+**Form says it can't save the message.** → Database details in `config.php`
+are wrong, or `database.sql` wasn't imported (Steps 2–4).
 
-**No email arrives, but the message is saved.**
-→ The database part works; email is a hosting/deliverability issue. Confirm
-`ADMIN_EMAIL`, use a `MAIL_FROM` on your own domain, and check spam. Contact
-your host to confirm PHP `mail()` is enabled.
+**Message saved but no email.** → With `mail`, try SMTP (Step 5). With
+SMTP, double-check host, port/secure pair (465+`ssl` or 587+`tls`), and the
+mailbox password. Errors are written to the server's PHP error log.
 
-**A 500 error appears after upload.**
-→ Usually an `.htaccess` module your host disabled. The file is written
-defensively, but if needed you can temporarily rename `.htaccess` to test.
+**"Sending messages too quickly."** → The anti-spam limit is working. Wait
+30 seconds (or adjust `RATE_LIMIT_SECONDS` / `RATE_LIMIT_PER_HOUR`).
 
-**Pages load but look unstyled.**
-→ The `assets/` folder didn't upload fully, or files aren't directly in
-`public_html`. Re-check Step 1.
+**500 error after upload.** → Rare with this `.htaccess`, but you can rename
+it temporarily to test, then ask your host which Apache module is disabled.
+
+**Pages look unstyled.** → The `assets/` folder didn't upload fully, or files
+aren't directly inside `public_html`.
 
 ---
+
+## Making changes later
+
+Edit files in `src/`, run `php build/build.php`, and upload the changed files
+from `public/`. See [README.md](README.md) for which file controls what.
 
 © Urri Group. All rights reserved.

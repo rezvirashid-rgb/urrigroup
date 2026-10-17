@@ -29,5 +29,6 @@ CREATE TABLE IF NOT EXISTS `contact_submissions` (
   PRIMARY KEY (`id`),
   KEY `idx_status`     (`status`),
   KEY `idx_created_at` (`created_at`),
-  KEY `idx_email`      (`email`)
+  KEY `idx_email`      (`email`),
+  KEY `idx_ip_created` (`ip_address`, `created_at`)   -- per-IP rate limiting
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
